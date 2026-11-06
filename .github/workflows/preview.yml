@@ -1,0 +1,37 @@
+# Deploys every pull request (drafts included) to
+# https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/
+# and comments the link on the PR. The preview is removed when the PR closes.
+name: Deploy PR preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency: preview-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  deployments: read
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy or remove preview
+        uses: rossjrw/pr-preview-action@v1.8.2
+        with:
+          source-dir: .
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          # Post the comment only once the preview link actually works.
+          wait-for-pages-deployment: true
+          # The default QR code uses a third-party service; keep it off.
+          qr-code: false

@@ -1,0 +1,31 @@
+# Publishes main to the gh-pages branch, which GitHub Pages serves.
+# PR previews live in gh-pages/pr-preview/ and must survive these deploys.
+name: Deploy site
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: deploy-main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4.9.0
+        with:
+          folder: .
+          branch: gh-pages
+          # Keep PR previews when main is redeployed.
+          clean-exclude: pr-preview
+          # Rebase instead of force-pushing, so in-flight previews aren't wiped.
+          force: false
