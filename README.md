@@ -8,3 +8,6 @@ being delightful. Plain HTML, CSS and vanilla JavaScript, one app per folder.
 - [`CLAUDE.md`](CLAUDE.md) holds the rules: workflow, tech rules and Git process.
 - [`apps.json`](apps.json) is the backlog and source of truth for every app's status.
   The launcher page (`index.html`) shows every app whose status is `"live"`.
+- `main` is published to the `gh-pages` branch by GitHub Actions. Every pull request
+  that touches the site gets a preview (marked with a "PREVIEW" badge) at
+  `https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/`.
