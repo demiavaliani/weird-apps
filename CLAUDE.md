@@ -92,7 +92,9 @@ goes through the same pitch approval before anything is added or built.
 - Preview: when work is ready, push the branch and open a **draft** pull request into
   main. A GitHub Action deploys it to
   https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/ and comments
-  the link on the PR. Wait for that comment and check the preview loads.
+  the link on the PR. Wait for that comment and check the preview loads. Preview
+  pages carry a "PREVIEW · PR #N" badge. PRs that only change Markdown or .github/
+  get no preview.
 - Approval 1, before the pull request is ready: share the draft PR link and the preview
   link, briefly summarize what you built and suggest 2–3 small optional improvements
   without building them. Then stop. Only mark the pull request "Ready for review"

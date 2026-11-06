@@ -10,6 +10,10 @@ on:
       - reopened
       - synchronize
       - closed
+    # Only preview PRs that touch the site itself, not docs or CI config.
+    paths-ignore:
+      - "**.md"
+      - ".github/**"
 
 concurrency: preview-${{ github.ref }}
 
@@ -24,6 +28,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Badge every page of the preview so it's never mistaken for the live site.
+      # Only the deployed copy is changed; the branch itself is untouched.
+      - name: Add preview ribbon
+        if: github.event.action != 'closed'
+        env:
+          RIBBON: >-
+            <div id="pr-preview-ribbon" role="note"
+            style="position:fixed;left:12px;bottom:12px;z-index:2147483647;
+            padding:6px 12px;border:2px solid #2b2140;border-radius:999px;
+            background:#ffd23f;color:#2b2140;box-shadow:2px 2px 0 #2b2140;
+            font:700 13px/1.2 system-ui,sans-serif;opacity:.92;
+            pointer-events:none">PREVIEW · PR #${{ github.event.number }}</div>
+        run: |
+          find . -name '*.html' -not -path './.git/*' -print0 |
+            while IFS= read -r -d '' file; do
+              if grep -qi '</body>' "$file"; then
+                perl -0pi -e 's#</body>#$ENV{RIBBON}\n</body>#i' "$file"
+              else
+                printf '%s\n' "$RIBBON" >> "$file"
+              fi
+            done
 
       - name: Deploy or remove preview
         uses: rossjrw/pr-preview-action@v1.8.2
