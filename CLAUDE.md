@@ -136,7 +136,7 @@ Every approval ("Approved plan", "Approved PR", "Approved merge", "Approved live
 asked with the question dialog (AskUserQuestion), so I can answer with a button.
 Put the summary and links in the message first, then ask. Options:
 - first, the approve option, named exactly like the phrase (e.g. "Approved PR");
-- second, "Pause here": stop and wait for my next message, changing nothing.
+- second, "Pause": stop and wait for my next message, changing nothing.
 The dialog's built-in "Other" field is where I type change requests, so I can write
 the changes and submit them in one go. The question text says so ("To request
 changes, type them in Other"). Treat what I type there as the requested changes:

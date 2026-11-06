@@ -64,7 +64,7 @@ Send:
 - 2–3 small optional improvements, not built
 
 Then ask with the question dialog (see "Asking for approval" in `CLAUDE.md`):
-options **"Approved PR"** (mark it ready) and **"Pause here"**; changes are typed in
+options **"Approved PR"** (mark it ready) and **"Pause"**; changes are typed in
 the dialog's "Other" field, and the question says so.
 
 - Changes requested: commit and push to the same branch (the preview updates
@@ -74,7 +74,7 @@ the dialog's "Other" field, and the question says so.
 ## Phase 6: Approval 2 → **Stop**
 
 Say the PR is ready, then ask with the question dialog: options
-**"Approved merge"** and **"Pause here"** (changes typed in "Other").
+**"Approved merge"** and **"Pause"** (changes typed in "Other").
 Never merge a draft.
 
 ## Phase 7: Merge and deploy (after "Approved merge")
@@ -93,7 +93,7 @@ Never merge a draft.
 
 Send the live app link and ask the user to try it, then ask with the question
 dialog: options **"Approved live"** (list it in the launcher) and
-**"Pause here"** (changes typed in "Other").
+**"Pause"** (changes typed in "Other").
 
 - Changes requested: ask what to change if it isn't clear. Restart the app's branch
   from the latest `main` (`git checkout -B <slug> origin/main`), make the fixes,
