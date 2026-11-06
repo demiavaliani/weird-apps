@@ -10,10 +10,11 @@ on:
       - reopened
       - synchronize
       - closed
-    # Only preview PRs that touch the site itself, not docs or CI config.
+    # Only preview PRs that touch the site itself, not docs, CI config or skills.
     paths-ignore:
       - "**.md"
       - ".github/**"
+      - ".claude/**"
 
 concurrency: preview-${{ github.ref }}
 
@@ -42,6 +43,11 @@ jobs:
             font:700 13px/1.2 system-ui,sans-serif;opacity:.92;
             pointer-events:none">PREVIEW · PR #${{ github.event.number }}</div>
         run: |
+          # The site-wide .nojekyll at the gh-pages root already covers previews.
+          # A copy here would be left behind when the preview is removed.
+          rm -f .nojekyll
+          # Agent skills aren't part of the site.
+          rm -rf .claude
           find . -name '*.html' -not -path './.git/*' -print0 |
             while IFS= read -r -d '' file; do
               if grep -qi '</body>' "$file"; then

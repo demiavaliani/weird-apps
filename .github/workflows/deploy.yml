@@ -20,6 +20,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Agent skills aren't part of the site.
+      - name: Remove non-site files
+        run: rm -rf .claude
+
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:

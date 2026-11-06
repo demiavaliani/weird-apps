@@ -40,9 +40,10 @@ is merged.
   users), and only on a free plan. Mention in the pitch why it's needed.
 
 ## External resources: approval required
-Anything external needs my approval before it's added: CDN libraries, web fonts,
-images, icons, audio, APIs, databases, backend hosting, or any service or account.
-Built-in browser features don't need approval.
+Anything external needs my approval before it's added: CDN libraries, images,
+icons, audio, APIs, databases, backend hosting, or any service or account.
+Built-in browser features don't need approval. Free web fonts (e.g. Google Fonts)
+are fine to use without approval; just name them in the pitch.
 For each external item, say briefly what it is, what it's for, and whether it's free
 (and whether anything could ever cost money).
 Only items mentioned in the approved pitch may be used. Anything new that comes up
@@ -85,6 +86,15 @@ goes through the same pitch approval before anything is added or built.
   every app with status "live" (name, one-line idea, link). It reads apps.json, so
   new apps appear automatically once they're live.
 
+## Skills
+Project skills live in .claude/skills/. Use them for every app:
+- pitch-app: Step 1, the pitch.
+- ship-app: Step 2, from "Approved plan" to live (branch, build, QA, draft PR,
+  both approvals, apps.json statuses).
+- qa-app: browser and code checks against these rules; run before every draft PR.
+- frontend-design: visual direction (copied from Anthropic's official skills).
+  This file wins where they differ, especially on tone.
+
 ## Git rules
 - Always work on a branch. Never push to or merge into main on your own.
 - Each app gets its own branch, named after the idea: its slug from apps.json
@@ -93,7 +103,7 @@ goes through the same pitch approval before anything is added or built.
   main. A GitHub Action deploys it to
   https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/ and comments
   the link on the PR. Wait for that comment and check the preview loads. Preview
-  pages carry a "PREVIEW · PR #N" badge. PRs that only change Markdown or .github/
+  pages carry a "PREVIEW · PR #N" badge. PRs that only change Markdown, .github/ or .claude/
   get no preview.
 - Approval 1, before the pull request is ready: share the draft PR link and the preview
   link, briefly summarize what you built and suggest 2–3 small optional improvements
