@@ -134,7 +134,12 @@ Project skills live in .claude/skills/. Use them for every app:
 ## Asking for approval
 Every approval ("Approved plan", "Approved PR", "Approved merge", "Approved live") is
 asked with the question dialog (AskUserQuestion), so I can answer with a button.
-Put the summary and links in the message first, then ask. The approve option is first and named exactly
-like the phrase (e.g. "Approved PR"); the second option is "Request changes".
-Clicking the approve option counts the same as typing the phrase. Typing still works,
-and "Other" or "Request changes" means: ask what to change, change it, and ask again.
+Put the summary and links in the message first, then ask. Options:
+- first, the approve option, named exactly like the phrase (e.g. "Approved PR");
+- second, "Pause here": stop and wait for my next message, changing nothing.
+The dialog's built-in "Other" field is where I type change requests, so I can write
+the changes and submit them in one go. The question text says so ("To request
+changes, type them in Other"). Treat what I type there as the requested changes:
+make them, then ask again. Only ask what I meant if it's genuinely unclear.
+Clicking the approve option counts the same as typing the phrase; typing the phrase
+in a normal message still works too.
