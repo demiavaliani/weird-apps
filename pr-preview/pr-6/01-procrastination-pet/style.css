@@ -16,7 +16,7 @@
 
   --font: "Fredoka", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
   /* The scene takes the height the rest of the page leaves over. */
-  --scene-h: clamp(200px, calc(100vh - 400px), 440px);
+  --scene-h: clamp(180px, calc(100vh - 440px), 440px);
   /* At full size the pet plus its rain cloud is about 1.8x this, which must fit
      in the scene above the couch seat. */
   --pet-base: min(34vw, 200px, calc(var(--scene-h) * 0.4));
@@ -117,7 +117,7 @@ body.is-sulking {
 
 /* Sized by its width, so the pet can be seated relative to the couch (cqw). */
 @supports (height: 100dvh) {
-  :root { --scene-h: clamp(200px, calc(100dvh - 400px), 440px); }
+  :root { --scene-h: clamp(180px, calc(100dvh - 440px), 440px); }
 }
 
 .scene {
@@ -336,7 +336,14 @@ body.is-sulking .growth-fill { background: var(--cloud); }
   color: var(--ink);
 }
 
-.start-over {
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.control {
   font: inherit;
   font-size: 0.95rem;
   font-weight: 600;
@@ -348,8 +355,15 @@ body.is-sulking .growth-fill { background: var(--cloud); }
   cursor: pointer;
 }
 
-.start-over:hover { background: var(--wall); }
-.start-over:active { transform: translateY(1px); }
+.control:hover { background: var(--wall); }
+.control:active { transform: translateY(1px); }
+.control[aria-pressed="true"] { background: var(--sun); }
+
+.best {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
 
 :focus-visible {
   outline: 3px dashed var(--ink);
@@ -388,6 +402,16 @@ body.is-sulking .growth-fill { background: var(--cloud); }
   0% { transform: scale(1); }
   40% { transform: scale(1.12); }
   100% { transform: scale(1); }
+}
+
+/* Short screens (small phones): tighten spacing so nothing needs scrolling,
+   since scrolling upsets the pet. */
+@media (max-height: 620px) {
+  .caption { margin: 8px 0 6px; font-size: 1.05rem; }
+  .growth-bar { margin: 4px 0; }
+  .hint { font-size: 0.85rem; margin-bottom: 6px; }
+  .footer { padding: 4px 16px 10px; }
+  .control { padding: 6px 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

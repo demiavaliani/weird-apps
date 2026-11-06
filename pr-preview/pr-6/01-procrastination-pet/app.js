@@ -14,6 +14,8 @@
   const WELCOME_BACK_MIN_S = 60;   // time away needed for a welcome-back note
   const MAX_AWAY_S = 30 * 24 * 3600;
   const NOTE_MS = 3500;
+  const SNORE_FROM_STAGE = "Small Moon";
+  const APP_NAME = "Procrastination Pet";
   const WELCOME_NOTE_MS = 7000;
 
   // Growth is measured in seconds of doing nothing.
@@ -68,6 +70,9 @@
   const growthLabel = document.getElementById("growth-label");
   const growthDetail = document.getElementById("growth-detail");
   const startOverButton = document.getElementById("start-over");
+  const snoreButton = document.getElementById("snore-toggle");
+  const bestEl = document.getElementById("best");
+  const bestStageEl = document.getElementById("best-stage");
 
   // ---------- storage (optional: the pet works without it) ----------
 
@@ -79,7 +84,8 @@
       const growth = Number(data.growth);
       const lastSeen = Number(data.lastSeen);
       if (!Number.isFinite(growth) || growth < 0 || !Number.isFinite(lastSeen)) return null;
-      return { growth, lastSeen };
+      const best = Number(data.best);
+      return { growth, lastSeen, best: Number.isFinite(best) && best > growth ? best : growth };
     } catch (error) {
       return null;
     }
@@ -89,7 +95,7 @@
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ growth: state.growth, lastSeen: Date.now() }),
+        JSON.stringify({ growth: state.growth, best: state.best, lastSeen: Date.now() }),
       );
     } catch (error) {
       // Storage is blocked or full: the pet just won't remember you.
@@ -100,6 +106,8 @@
 
   const state = {
     growth: 0,              // seconds of idleness, ever
+    best: 0,                // the most growth ever reached, kept after starting over
+    snoring: false,         // the user turned the snore sound on
     sulkUntil: 0,           // timestamp (ms) when the current sulk ends
     lastTick: Date.now(),
     lastSave: 0,
@@ -199,6 +207,11 @@
     const stage = STAGES[index];
     const next = STAGES[index + 1];
 
+    state.best = Math.max(state.best, state.growth);
+    renderTitle(stage, sulking);
+    renderBest();
+    renderSnore(index, sulking);
+
     const scale = scaleFor(state.growth).toFixed(3);
     if (scale !== rendered.scale) {
       rendered.scale = scale;
@@ -226,7 +239,7 @@
       setText(growthLabel, "Final form");
       setText(
         growthDetail,
-        sulking ? "Even final forms sulk." : "There is nowhere left to grow. Keep doing nothing anyway.",
+        sulking ? "Even final forms sulk." : "Nowhere left to grow. Keep doing nothing.",
       );
     }
     if (percent !== rendered.percent) {
@@ -234,6 +247,30 @@
       growthFill.style.width = `${percent}%`;
       growthBar.setAttribute("aria-valuenow", String(percent));
     }
+  }
+
+  // The tab shows the size, so it keeps growing while you're in another tab.
+  function renderTitle(stage, sulking) {
+    const title = `${sulking ? "☁ " : ""}${stage.name} | ${APP_NAME}`;
+    if (document.title !== title) document.title = title;
+  }
+
+  function renderBest() {
+    const bestIndex = stageIndexFor(state.best);
+    bestEl.hidden = bestIndex === 0;
+    setText(bestStageEl, STAGES[bestIndex].name);
+  }
+
+  const snoreFromIndex = STAGES.findIndex((stage) => stage.name === SNORE_FROM_STAGE);
+
+  function renderSnore(index, sulking) {
+    const bigEnough = index >= snoreFromIndex;
+    const visible = document.visibilityState === "visible";
+    if (window.PetSnore) window.PetSnore.setActive(state.snoring && bigEnough && !sulking && visible);
+    let label = "Snoring: off";
+    if (state.snoring) label = bigEnough ? "Snoring: on" : `Snoring at ${SNORE_FROM_STAGE}`;
+    setText(snoreButton, label);
+    snoreButton.setAttribute("aria-pressed", String(state.snoring));
   }
 
   // ---------- the loop ----------
@@ -309,14 +346,28 @@
 
   const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock"]);
 
+  // The page's own buttons don't upset the pet.
+  function isControl(target) {
+    return Boolean(target && target.closest && target.closest(".control"));
+  }
+
   function onKey(event) {
     if (event.repeat || MODIFIER_KEYS.has(event.key)) return;
+    if ((event.key === "Enter" || event.key === " ") && isControl(event.target)) return;
     disturb("key");
   }
 
-  function startOver(event) {
-    event.stopPropagation(); // starting over isn't an insult
-    state.growth = 0;
+  function toggleSnore() {
+    if (!state.snoring && !(window.PetSnore && window.PetSnore.enable())) {
+      showNote("my snoring machine is broken. lucky you.");
+      return;
+    }
+    state.snoring = !state.snoring;
+    render(Date.now());
+  }
+
+  function startOver() {
+    state.growth = 0; // the personal best stays
     state.sulkUntil = 0;
     state.stageIndex = 0;
     renderStage(0, true);
@@ -344,6 +395,7 @@
       const away = Math.min(MAX_AWAY_S, Math.max(0, (Date.now() - saved.lastSeen) / 1000));
       const before = stageIndexFor(saved.growth);
       state.growth = saved.growth + away;
+      state.best = saved.best;
       if (away >= WELCOME_BACK_MIN_S) {
         welcomeBack(away, stageIndexFor(state.growth) - before);
       }
@@ -356,17 +408,21 @@
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", (event) => {
-      if (event.target === startOverButton) return;
+      if (isControl(event.target)) return;
       disturb("click");
     });
     window.addEventListener("wheel", () => disturb("scroll"), { passive: true });
     window.addEventListener("touchmove", () => disturb("scroll"), { passive: true });
     window.addEventListener("pointermove", sideEye);
     startOverButton.addEventListener("click", startOver);
+    if (window.PetSnore && window.PetSnore.isSupported) {
+      snoreButton.hidden = false;
+      snoreButton.addEventListener("click", toggleSnore);
+    }
 
     document.addEventListener("visibilitychange", () => {
+      tick(); // also stops the snore right away when the tab is hidden
       if (document.visibilityState === "hidden") save();
-      else tick();
     });
     window.addEventListener("pagehide", save);
 
