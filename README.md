@@ -6,8 +6,12 @@ being delightful. Plain HTML, CSS and vanilla JavaScript, one app per folder.
 **Live site:** https://demiavaliani.github.io/weird-apps/
 
 - [`CLAUDE.md`](CLAUDE.md) holds the rules: workflow, tech rules and Git process.
+- [`.claude/skills/`](.claude/skills) holds the agent skills that follow those rules:
+  `pitch-app`, `ship-app`, `qa-app` and Anthropic's `frontend-design`.
 - [`apps.json`](apps.json) is the backlog and source of truth for every app's status.
   The launcher page (`index.html`) shows every app whose status is `"live"`.
-- `main` is published to the `gh-pages` branch by GitHub Actions. Every pull request
-  that touches the site gets a preview (marked with a "PREVIEW" badge) at
-  `https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/`.
+- `main` is published to the `gh-pages` branch by GitHub Actions. Only the launcher
+  and live apps are published; the backlog stays off the site.
+- Every pull request that touches the site gets a preview (marked with a "PREVIEW"
+  badge) at `https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/`,
+  and a QA comment from automated browser checks.

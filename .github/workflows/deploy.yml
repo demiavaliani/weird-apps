@@ -1,4 +1,6 @@
 # Publishes main to the gh-pages branch, which GitHub Pages serves.
+# Only site files go out (see .github/scripts/build-site.py): the launcher, live apps,
+# and an apps.json with live apps only, so the backlog isn't public on the site.
 # PR previews live in gh-pages/pr-preview/ and must survive these deploys.
 name: Deploy site
 
@@ -20,10 +22,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build site
+        run: python3 .github/scripts/build-site.py _site
+
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4.9.0
         with:
-          folder: .
+          folder: _site
           branch: gh-pages
           # Keep PR previews when main is redeployed.
           clean-exclude: pr-preview

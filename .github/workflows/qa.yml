@@ -1,0 +1,120 @@
+# Runs the qa-app checks (.claude/skills/qa-app/qa.cjs) on every app a PR touches,
+# posts the results as a comment on the PR (updated on each push), uploads the
+# screenshots, and fails the check if anything FAILs.
+name: QA
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - "[0-9][0-9]-*/**"
+      - "index.html"
+      - "apps.json"
+      - ".claude/skills/qa-app/**"
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  PLAYWRIGHT_VERSION: 1.64.1
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find apps to check
+        id: targets
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # App folders (NN-slug/) changed in this PR that still exist.
+          targets=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" |
+            grep -oE '^[0-9]{2}-[^/]+' | sort -u |
+            while read -r dir; do [ -f "$dir/index.html" ] && echo "$dir"; done || true)
+          # Otherwise the launcher, apps.json or the QA script changed: check the launcher.
+          if [ -z "$targets" ]; then targets="."; fi
+          echo "Checking: $targets"
+          {
+            echo "list<<EOF"
+            echo "$targets"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock "playwright@$PLAYWRIGHT_VERSION"
+          npx playwright install --with-deps chromium
+
+      - name: Run QA
+        id: qa
+        env:
+          TARGETS: ${{ steps.targets.outputs.list }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          status=0
+          {
+            echo "## 🔍 QA results"
+            echo
+          } > qa-report.md
+          while read -r target; do
+            [ -z "$target" ] && continue
+            label=$([ "$target" = "." ] && echo "launcher" || echo "$target")
+            set +e
+            output=$(node .claude/skills/qa-app/qa.cjs "$target" --out qa-output 2>&1)
+            code=$?
+            set -e
+            if [ "$code" -eq 0 ]; then icon="✅"; else icon="❌"; status=1; fi
+            summary=$(echo "$output" | tail -n 1)
+            {
+              echo "### $icon \`$label\`: $summary"
+              echo
+              echo '```'
+              echo "$output" | grep -E '^(FAIL|WARN)' || echo "No problems found."
+              echo '```'
+              echo
+            } >> qa-report.md
+          done <<< "$TARGETS"
+          {
+            echo "Screenshots (desktop and phone): download **qa-screenshots** from [this run]($RUN_URL)."
+            echo
+            echo "<sub>Checked at ${{ github.event.pull_request.head.sha }}.</sub>"
+          } >> qa-report.md
+          cat qa-report.md
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-screenshots
+          path: qa-output/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Comment results on the PR
+        if: always() && hashFiles('qa-report.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: qa
+          path: qa-report.md
+
+      - name: Fail if QA failed
+        if: steps.qa.outputs.status != '0'
+        run: |
+          echo "QA found problems; see the PR comment or the log above."
+          exit 1
