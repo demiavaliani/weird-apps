@@ -1,110 +1,80 @@
-// A soft snore, synthesized with the Web Audio API (no audio files, nothing external).
+// The pet's snore: a short loop of a real toddler snoring (snore.mp3, stored in this
+// folder, nothing loaded from elsewhere).
+//
+// Sound: "Snoring child #1" by Joseph Sardin, BigSoundBank.com
+//   https://bigsoundbank.com/snoring-child-s1070.html
+//   License: CC0 1.0 (public domain). Trimmed to five breaths and loudness-normalized.
+//
 // Usage: PetSnore.enable() from a click (browsers only allow audio after a gesture),
 // then PetSnore.setActive(true/false) whenever the pet should or shouldn't snore.
 window.PetSnore = (function () {
   "use strict";
 
-  const BREATH_CYCLE_MS = 4200; // one inhale-snore + exhale + pause
-  const PEAK_VOLUME = 0.12;
-  const SILENT = 0.0001;        // exponential ramps can't reach 0
+  const SOUND_URL = "snore.mp3";
+  const VOLUME = 0.7;
+  const FADE_MS = 400;
+  const FADE_STEPS = 10;
 
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const isSupported = typeof window.Audio === "function";
 
-  let context = null;
-  let output = null;
-  let filter = null;
-  let breathTimer = 0;
+  let audio = null;
+  let broken = false;
   let active = false;
+  let fadeTimer = 0;
 
-  // Brown noise: soft, low rumble that a resonant filter turns into a snore.
-  function createNoiseBuffer(audioContext) {
-    const length = audioContext.sampleRate * 2;
-    const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
-    const data = buffer.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < length; i++) {
-      const white = Math.random() * 2 - 1;
-      last = (last + 0.02 * white) / 1.02;
-      data[i] = last * 3.5;
-    }
-    return buffer;
+  function fadeTo(target, onDone) {
+    window.clearInterval(fadeTimer);
+    const start = audio.volume;
+    let step = 0;
+    fadeTimer = window.setInterval(() => {
+      step += 1;
+      audio.volume = start + ((target - start) * step) / FADE_STEPS;
+      if (step >= FADE_STEPS) {
+        window.clearInterval(fadeTimer);
+        if (onDone) onDone();
+      }
+    }, FADE_MS / FADE_STEPS);
   }
 
-  function build() {
-    context = new AudioContextClass();
-
-    const noise = context.createBufferSource();
-    noise.buffer = createNoiseBuffer(context);
-    noise.loop = true;
-
-    // A low buzz underneath, for the "zzz" in the snore.
-    const buzz = context.createOscillator();
-    buzz.type = "sawtooth";
-    buzz.frequency.value = 62;
-    const buzzLevel = context.createGain();
-    buzzLevel.gain.value = 0.25;
-
-    filter = context.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.Q.value = 6;
-    filter.frequency.value = 220;
-
-    output = context.createGain();
-    output.gain.value = SILENT;
-
-    noise.connect(filter);
-    buzz.connect(buzzLevel).connect(filter);
-    filter.connect(output).connect(context.destination);
-    noise.start();
-    buzz.start();
-  }
-
-  function breathe() {
-    const now = context.currentTime;
-    const gain = output.gain;
-    gain.cancelScheduledValues(now);
-    gain.setValueAtTime(SILENT, now);
-    gain.exponentialRampToValueAtTime(PEAK_VOLUME, now + 1.4);   // the snore
-    gain.exponentialRampToValueAtTime(PEAK_VOLUME * 0.3, now + 2.0);
-    gain.exponentialRampToValueAtTime(SILENT, now + 3.0);       // the exhale
-
-    filter.frequency.cancelScheduledValues(now);
-    filter.frequency.setValueAtTime(180, now);
-    filter.frequency.linearRampToValueAtTime(360, now + 1.4);
-    filter.frequency.linearRampToValueAtTime(260, now + 3.0);
-  }
-
-  function hush() {
-    const now = context.currentTime;
-    output.gain.cancelScheduledValues(now);
-    output.gain.setValueAtTime(Math.max(output.gain.value, SILENT), now);
-    output.gain.exponentialRampToValueAtTime(SILENT, now + 0.3);
+  function play() {
+    const result = audio.play();
+    // play() returns a promise in modern browsers; a rejection (blocked autoplay)
+    // just means no sound.
+    if (result && typeof result.catch === "function") result.catch(() => {});
   }
 
   return {
-    isSupported: Boolean(AudioContextClass),
+    isSupported,
 
     // Call from a user gesture. Returns false if audio isn't available.
     enable() {
-      if (!AudioContextClass) return false;
-      try {
-        if (!context) build();
-        if (context.state === "suspended") context.resume();
-        return true;
-      } catch (error) {
-        return false;
+      if (!isSupported || broken) return false;
+      if (!audio) {
+        audio = new Audio(SOUND_URL);
+        audio.loop = true;
+        audio.preload = "auto";
+        audio.volume = 0;
+        audio.addEventListener("error", () => {
+          broken = true;
+          active = false;
+        });
+        // Start and immediately pause inside the gesture, so later play() calls
+        // (when the pet grows big enough) are allowed.
+        play();
+        if (!active) audio.pause();
       }
+      return true;
     },
 
     setActive(shouldSnore) {
-      if (!context || shouldSnore === active) return;
+      if (!audio || broken || shouldSnore === active) return;
       active = shouldSnore;
-      window.clearInterval(breathTimer);
       if (active) {
-        breathe();
-        breathTimer = window.setInterval(breathe, BREATH_CYCLE_MS);
+        audio.volume = 0;
+        play();
+        fadeTo(VOLUME);
       } else {
-        hush();
+        fadeTo(0, () => audio.pause());
       }
     },
   };
