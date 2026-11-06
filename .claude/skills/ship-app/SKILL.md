@@ -49,14 +49,17 @@ branch = `slug`.
 4. Subscribe to the PR's activity and end the turn. The preview workflow comments a
    link (`https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/`) once
    it's live. Don't poll with sleep.
-5. When the comment arrives, open `<preview>/NN-slug/` and check that it loads and
-   shows the "PREVIEW · PR #N" badge. If the workflow failed, read its logs and fix
-   the cause (never disable the workflow or skip checks).
+5. Two comments arrive: the preview link, and **QA results** from the QA workflow
+   (the same checks as `qa-app`, with screenshots attached to the run). Open
+   `<preview>/NN-slug/` and check that it loads and shows the "PREVIEW · PR #N"
+   badge. If QA reports a FAIL or a workflow failed, read its logs, fix the cause
+   and push again (never disable a workflow or skip checks).
 
 ## Phase 5: Approval 1 → **Stop**
 
 Send:
 - draft PR link and the preview link to the app (`.../pr-<number>/NN-slug/`)
+- the QA result (all passing, or which WARNs remain and why)
 - a brief summary of what was built
 - 2–3 small optional improvements, not built
 

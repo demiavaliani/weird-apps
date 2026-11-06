@@ -1,6 +1,7 @@
 # Deploys every pull request (drafts included) to
 # https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/
 # and comments the link on the PR. The preview is removed when the PR closes.
+# The preview is built like the real site, with "in-review" apps shown as live.
 name: Deploy PR preview
 
 on:
@@ -30,10 +31,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build preview
+        if: github.event.action != 'closed'
+        run: python3 .github/scripts/build-site.py _site --preview
+
       # Badge every page of the preview so it's never mistaken for the live site.
-      # Only the deployed copy is changed; the branch itself is untouched.
       - name: Add preview ribbon
         if: github.event.action != 'closed'
+        working-directory: _site
         env:
           RIBBON: >-
             <div id="pr-preview-ribbon" role="note"
@@ -43,12 +48,7 @@ jobs:
             font:700 13px/1.2 system-ui,sans-serif;opacity:.92;
             pointer-events:none">PREVIEW · PR #${{ github.event.number }}</div>
         run: |
-          # The site-wide .nojekyll at the gh-pages root already covers previews.
-          # A copy here would be left behind when the preview is removed.
-          rm -f .nojekyll
-          # Agent skills aren't part of the site.
-          rm -rf .claude
-          find . -name '*.html' -not -path './.git/*' -print0 |
+          find . -name '*.html' -print0 |
             while IFS= read -r -d '' file; do
               if grep -qi '</body>' "$file"; then
                 perl -0pi -e 's#</body>#$ENV{RIBBON}\n</body>#i' "$file"
@@ -60,7 +60,7 @@ jobs:
       - name: Deploy or remove preview
         uses: rossjrw/pr-preview-action@v1.8.2
         with:
-          source-dir: .
+          source-dir: _site
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           # Post the comment only once the preview link actually works.

@@ -85,6 +85,10 @@ goes through the same pitch approval before anything is added or built.
 - index.html at the repo root is a launcher page in the same playful style, listing
   every app with status "live" (name, one-line idea, link). It reads apps.json, so
   new apps appear automatically once they're live.
+- The deployed site only contains the launcher, live app folders and an apps.json
+  with live apps only (.github/scripts/build-site.py), so the backlog isn't on the
+  site. If the launcher ever needs another root file, add it to SITE_FILES there.
+  Apps must keep everything they need inside their own folder.
 
 ## Skills
 Project skills live in .claude/skills/. Use them for every app:
@@ -104,7 +108,8 @@ Project skills live in .claude/skills/. Use them for every app:
   https://demiavaliani.github.io/weird-apps/pr-preview/pr-<number>/ and comments
   the link on the PR. Wait for that comment and check the preview loads. Preview
   pages carry a "PREVIEW · PR #N" badge. PRs that only change Markdown, .github/ or .claude/
-  get no preview.
+  get no preview. A QA workflow also runs the qa-app checks on every changed app and
+  comments the results on the PR; fix every FAIL before asking for approval.
 - Approval 1, before the pull request is ready: share the draft PR link and the preview
   link, briefly summarize what you built and suggest 2–3 small optional improvements
   without building them. Then stop. Only mark the pull request "Ready for review"
