@@ -8,7 +8,17 @@
   const TICK_MS = 250;
   const SAVE_EVERY_MS = 2000;
   const SULK_MS = 4000;            // how long a sulk lasts after the last disturbance
-  const FIDGET_PENALTY_S = 2;      // growth lost per disturbance while already sulking
+  // Growth lost per disturbance while already sulking: a third of the current size's
+  // range, so about three fidgets in a row drop it one size, whatever its size
+  // (at least a couple of seconds).
+  const FIDGETS_PER_SIZE = 3;
+  const FIDGET_PENALTY_MIN_S = 2;
+  // Growth stops a little past the final size, so even a cat left alone for days
+  // visibly shrinks a size after a few fidgets.
+  const MAX_GROWTH_S = 24000;
+  // Within a size the cat grows only gently; most of the visible change is the step
+  // between sizes, so dropping a size is an obvious jump down.
+  const WITHIN_STAGE_GROWTH = 0.35;
   const SIDE_EYE_MS = 1200;
   const DISTURB_COOLDOWN_MS = 400; // one scroll gesture fires many events; count it once
   const WELCOME_BACK_MIN_S = 60;   // time away needed for a welcome-back note
@@ -18,16 +28,17 @@
   const APP_NAME = "Procrastination Pet";
   const WELCOME_NOTE_MS = 7000;
 
-  // Growth is measured in seconds of doing nothing.
+  // Growth is measured in seconds of doing nothing. Each size has its own drawn
+  // scale (up to 1.3x, which the CSS sizes to fit the scene).
   const STAGES = [
-    { name: "Speck", at: 0, caption: "Barely a pet. Mostly potential." },
-    { name: "Bean", at: 20, caption: "Look at me. Not doing anything. Thriving." },
-    { name: "Loaf", at: 60, caption: "I have achieved loaf. Your stillness nourishes me." },
-    { name: "Chonk", at: 180, caption: "I have a second chin now. Keep ignoring me." },
-    { name: "Absolute Unit", at: 480, caption: "Doctors are concerned. I am not." },
-    { name: "Small Moon", at: 1200, caption: "I have my own gravity. Please continue doing nothing." },
-    { name: "Local Landmark", at: 3600, caption: "Tourists visit me now. You did this by doing nothing." },
-    { name: "Weather System", at: 21600, caption: "I am visible from space. Proud of you, I guess." },
+    { name: "Speck", at: 0, scale: 0.35, caption: "Barely a pet. Mostly potential." },
+    { name: "Bean", at: 20, scale: 0.47, caption: "Look at me. Not doing anything. Thriving." },
+    { name: "Loaf", at: 60, scale: 0.6, caption: "I have achieved loaf. Your stillness nourishes me." },
+    { name: "Chonk", at: 180, scale: 0.73, caption: "I have a second chin now. Keep ignoring me." },
+    { name: "Absolute Unit", at: 480, scale: 0.86, caption: "Doctors are concerned. I am not." },
+    { name: "Small Moon", at: 1200, scale: 0.99, caption: "I have my own gravity. Please continue doing nothing." },
+    { name: "Local Landmark", at: 3600, scale: 1.14, caption: "Tourists visit me now. You did this by doing nothing." },
+    { name: "Weather System", at: 21600, scale: 1.3, caption: "I am visible from space. Proud of you, I guess." },
   ];
 
   const NOTES = {
@@ -125,9 +136,27 @@
     return index;
   }
 
-  // Grows fast at first, then slower, up to 1.3x (sized to fit the scene in CSS).
+  // Each size has a clearly different scale; within a size it grows smoothly toward
+  // the next one. So every step up or down a size is visible, even at the top.
+  // Growth left after one fidget: a third of the current size's range, but never
+  // more than one size at a time (it lands at the top of the size below).
+  function afterFidget(growth) {
+    const index = stageIndexFor(growth);
+    const stage = STAGES[index];
+    const rangeEnd = STAGES[index + 1] ? STAGES[index + 1].at : MAX_GROWTH_S;
+    const penalty = Math.max(FIDGET_PENALTY_MIN_S, (rangeEnd - stage.at) / FIDGETS_PER_SIZE);
+    const reduced = growth - penalty;
+    if (reduced >= stage.at || index === 0) return Math.max(0, reduced);
+    return stage.at - 0.01; // just into the size below
+  }
+
   function scaleFor(growth) {
-    return 0.35 + 0.95 * (1 - Math.exp(-growth / 600));
+    const index = stageIndexFor(growth);
+    const stage = STAGES[index];
+    const next = STAGES[index + 1];
+    if (!next) return stage.scale;
+    const progress = Math.min(1, Math.max(0, (growth - stage.at) / (next.at - stage.at)));
+    return stage.scale + (next.scale - stage.scale) * progress * WITHIN_STAGE_GROWTH;
   }
 
   function formatDuration(totalSeconds) {
@@ -284,7 +313,7 @@
     const sulkMs = Math.max(0, Math.min(now, state.sulkUntil) - state.lastTick);
     state.lastTick = now;
     const idleSeconds = Math.max(0, elapsedMs - sulkMs) / 1000;
-    state.growth += Math.min(idleSeconds, MAX_AWAY_S);
+    state.growth = Math.min(MAX_GROWTH_S, state.growth + Math.min(idleSeconds, MAX_AWAY_S));
 
     render(now);
 
@@ -296,6 +325,13 @@
 
   // ---------- disturbances ----------
 
+  // A quick squish so each fidget penalty visibly lands.
+  function deflate() {
+    petEl.classList.remove("is-deflating");
+    void petEl.offsetWidth; // restart the animation
+    petEl.classList.add("is-deflating");
+  }
+
   function disturb(kind) {
     const now = Date.now();
     if (now - state.lastDisturb < DISTURB_COOLDOWN_MS) {
@@ -306,7 +342,8 @@
     tick(); // bank growth up to this moment first
 
     if (isSulking(now)) {
-      state.growth = Math.max(0, state.growth - FIDGET_PENALTY_S);
+      state.growth = afterFidget(state.growth);
+      deflate();
       if (Math.random() < 0.35) showNote(pick(NOTES.fidget));
     } else {
       showNote(pick(NOTES[kind]));
@@ -399,8 +436,8 @@
     if (saved) {
       const away = Math.min(MAX_AWAY_S, Math.max(0, (Date.now() - saved.lastSeen) / 1000));
       const before = stageIndexFor(saved.growth);
-      state.growth = saved.growth + away;
-      state.best = saved.best;
+      state.growth = Math.min(MAX_GROWTH_S, saved.growth + away);
+      state.best = Math.max(state.growth, Math.min(MAX_GROWTH_S, saved.best));
       if (away >= WELCOME_BACK_MIN_S) {
         welcomeBack(away, stageIndexFor(state.growth) - before);
       }

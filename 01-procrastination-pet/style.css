@@ -183,7 +183,11 @@ body.is-sulking {
   width: 100%;
   height: auto;
   overflow: visible;
+  transform-origin: 50% 100%;
 }
+
+/* Each fidget during a sulk costs growth: a quick deflating squish. */
+.pet.is-deflating .pet-body { animation: deflate 0.45s ease-out; }
 
 .pet-shadow { fill: rgba(46, 42, 79, 0.18); }
 
@@ -399,6 +403,13 @@ body.is-sulking .growth-fill { background: var(--cloud); }
 @keyframes breathe {
   0%, 100% { transform: scale(1, 1); }
   50% { transform: scale(1.03, 0.97); }
+}
+
+@keyframes deflate {
+  0% { transform: scale(1, 1); }
+  35% { transform: scale(0.86, 0.8); }
+  70% { transform: scale(1.03, 0.97); }
+  100% { transform: scale(1, 1); }
 }
 
 @keyframes huff {
