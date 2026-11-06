@@ -22,7 +22,7 @@
   const STAGES = [
     { name: "Speck", at: 0, caption: "Barely a pet. Mostly potential." },
     { name: "Bean", at: 20, caption: "Look at me. Not doing anything. Thriving." },
-    { name: "Blob", at: 60, caption: "Your stillness nourishes me." },
+    { name: "Loaf", at: 60, caption: "I have achieved loaf. Your stillness nourishes me." },
     { name: "Chonk", at: 180, caption: "I have a second chin now. Keep ignoring me." },
     { name: "Absolute Unit", at: 480, caption: "Doctors are concerned. I am not." },
     { name: "Small Moon", at: 1200, caption: "I have my own gravity. Please continue doing nothing." },
@@ -222,8 +222,8 @@
     setText(
       petLabel,
       sulking
-        ? `Your pet, ${withArticle(stage.name)}, sulking with its back to you under a tiny rain cloud.`
-        : `Your pet, ${withArticle(stage.name)}, looking pleased with you.`,
+        ? `Your cat, ${withArticle(stage.name)}, sulking with its back to you under a tiny rain cloud.`
+        : `Your cat, ${withArticle(stage.name)}, napping happily.`,
     );
 
     let percent = 100;
@@ -318,29 +318,34 @@
   let sideEyeTimer = 0;
   let sideEyeFrame = 0;
   let pointerX = 0;
-  let currentLook = 0;
+  let pointerY = 0;
+  const openEye = document.getElementById("pet-open-eye");
+  const PUPIL_TRAVEL = 5; // how far the pupil can move inside the eye (SVG units)
 
+  // One eye opens and follows the cursor; it closes again once the mouse rests.
   function updateSideEye() {
     sideEyeFrame = 0;
-    const rect = petEl.getBoundingClientRect();
-    const look = pointerX < rect.left + rect.width / 2 ? -5 : 5;
-    if (look !== currentLook) {
-      currentLook = look;
-      petEl.style.setProperty("--look", `${look}px`);
-    }
     petEl.classList.add("is-side-eye");
+    const eye = openEye.getBoundingClientRect();
+    const dx = pointerX - (eye.left + eye.width / 2);
+    const dy = pointerY - (eye.top + eye.height / 2);
+    const distance = Math.hypot(dx, dy) || 1;
+    const reach = Math.min(1, distance / 80); // small moves near the eye move it less
+    const lookX = ((dx / distance) * PUPIL_TRAVEL * reach).toFixed(1);
+    const lookY = ((dy / distance) * PUPIL_TRAVEL * 0.6 * reach).toFixed(1);
+    petEl.style.setProperty("--look-x", `${lookX}px`);
+    petEl.style.setProperty("--look-y", `${lookY}px`);
     window.clearTimeout(sideEyeTimer);
     sideEyeTimer = window.setTimeout(() => {
-      currentLook = 0;
       petEl.classList.remove("is-side-eye");
-      petEl.style.setProperty("--look", "0px");
     }, SIDE_EYE_MS);
   }
 
-  // Mouse movement only earns a suspicious look, at most once per frame.
+  // Mouse movement only earns one suspicious open eye, updated at most once per frame.
   function sideEye(event) {
     if (event.pointerType && event.pointerType !== "mouse") return;
     pointerX = event.clientX;
+    pointerY = event.clientY;
     if (!sideEyeFrame) sideEyeFrame = window.requestAnimationFrame(updateSideEye);
   }
 

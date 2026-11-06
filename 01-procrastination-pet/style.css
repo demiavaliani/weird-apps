@@ -21,7 +21,6 @@
      in the scene above the couch seat. */
   --pet-base: min(34vw, 200px, calc(var(--scene-h) * 0.4));
   --pet-scale: 0.35;
-  --look: 0px;
 }
 
 * { box-sizing: border-box; }
@@ -188,37 +187,39 @@ body.is-sulking {
 
 .pet-shadow { fill: rgba(46, 42, 79, 0.18); }
 
-.pet-blob,
-.pet-foot {
+.pet-body-shape,
+.pet-paw {
   fill: var(--pet);
   stroke: var(--ink);
   stroke-width: 5;
-}
-
-.pet-tuft {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 5;
-  stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.pet-eye-white { fill: var(--paper); stroke: var(--ink); stroke-width: 4; }
-.pet-pupil { fill: var(--ink); transform: translateX(var(--look)); transition: transform 0.25s ease; }
+.pet-inner-ear { fill: var(--pet-cheek); }
 .pet-cheek { fill: var(--pet-cheek); opacity: 0.8; }
+.pet-nose { fill: var(--pet-cheek); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
 
-.pet-mouth,
-.pet-grump {
+/* The tail: a thick ink stroke with a narrower pink stroke on top. */
+.tail-outline,
+.tail-fill { fill: none; stroke-linecap: round; }
+.tail-outline { stroke: var(--ink); stroke-width: 22; }
+.tail-fill { stroke: var(--pet); stroke-width: 13; }
+
+.pet-line,
+.pet-whiskers path {
   fill: none;
   stroke: var(--ink);
   stroke-width: 4;
   stroke-linecap: round;
 }
 
-.pet-eye {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: blink 6s infinite;
+.pet-whiskers path { stroke-width: 2.5; opacity: 0.7; }
+
+.pet-eye-white { fill: var(--paper); stroke: var(--ink); stroke-width: 4; }
+.pet-pupil {
+  fill: var(--ink);
+  transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+  transition: transform 0.12s ease-out;
 }
 
 .pet-breath {
@@ -227,18 +228,41 @@ body.is-sulking {
   animation: breathe 3.6s ease-in-out infinite;
 }
 
+/* Napping z's: one slow drift, hidden whenever it's disturbed or watching. */
+.zzz text {
+  fill: var(--ink-soft);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 22px;
+  animation: drift 3.6s ease-in-out infinite;
+}
+.zzz text:nth-child(2) { font-size: 16px; animation-delay: 1.8s; }
+
 .pet-face,
-.pet-back { transition: opacity 0.3s ease; }
+.pet-inner-ear,
+.pet-back,
+.pet-back-tail,
+.pet-paw,
+.zzz,
+.pet-eye-open,
+.pet-eye-left { transition: opacity 0.25s ease; }
 
-.pet-back { opacity: 0; }
-.pet-tail { fill: var(--paper); stroke: var(--ink); stroke-width: 4; }
+.pet-back,
+.pet-back-tail,
+.pet-eye-open { opacity: 0; }
 
-/* Suspicious side-eye: the mouse moved. */
-.pet.is-side-eye .pet-eye { animation: none; transform: scaleY(0.55); }
+/* Cursor moving: one eye opens and follows it. */
+.pet.is-side-eye .pet-eye-open { opacity: 1; }
+.pet.is-side-eye .pet-eye-left,
+.pet.is-side-eye .zzz { opacity: 0; }
 
-/* The sulk: back turned, rain cloud, room dims. */
-.pet.is-sulking .pet-face { opacity: 0; }
-.pet.is-sulking .pet-back { opacity: 1; }
+/* The sulk: back turned (ears, stripes, tail up), rain cloud, room dims. */
+.pet.is-sulking .pet-face,
+.pet.is-sulking .pet-inner-ear,
+.pet.is-sulking .pet-paw,
+.pet.is-sulking .zzz { opacity: 0; }
+.pet.is-sulking .pet-back,
+.pet.is-sulking .pet-back-tail { opacity: 1; }
 .pet.is-sulking .pet-breath { animation: huff 0.9s ease-in-out infinite; }
 
 .rain {
@@ -382,9 +406,10 @@ body.is-sulking .growth-fill { background: var(--cloud); }
   50% { transform: scale(0.97, 1.02) rotate(-1.5deg); }
 }
 
-@keyframes blink {
-  0%, 94%, 100% { transform: scaleY(1); }
-  96% { transform: scaleY(0.1); }
+@keyframes drift {
+  0% { transform: translate(0, 6px); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translate(6px, -10px); opacity: 0; }
 }
 
 @keyframes drip {
