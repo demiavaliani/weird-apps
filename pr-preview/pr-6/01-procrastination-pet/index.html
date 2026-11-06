@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="A pet that grows while you do absolutely nothing, and sulks when you don't.">
+  <title>Procrastination Pet</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%8B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../">All weird apps</a>
+    <h1 class="app-title">Procrastination Pet</h1>
+  </header>
+
+  <main class="room" id="room">
+    <div class="wall-zone">
+    <p class="stage-name" id="stage-name">Speck</p>
+
+    <div class="scene">
+      <p class="note" id="note" role="status" aria-live="polite" hidden></p>
+
+      <div class="pet" id="pet">
+        <svg class="rain" viewBox="0 0 120 90" aria-hidden="true">
+          <g class="rain-cloud">
+            <circle cx="38" cy="34" r="20" />
+            <circle cx="62" cy="26" r="24" />
+            <circle cx="86" cy="36" r="18" />
+            <rect x="22" y="34" width="80" height="20" rx="10" />
+          </g>
+          <g class="rain-drops">
+            <line x1="40" y1="62" x2="36" y2="74" />
+            <line x1="60" y1="62" x2="56" y2="74" />
+            <line x1="80" y1="62" x2="76" y2="74" />
+          </g>
+        </svg>
+
+        <svg class="pet-body" id="pet-svg" viewBox="0 0 200 180" role="img"
+             aria-labelledby="pet-label">
+          <title id="pet-label">Your pet, a speck, looking pleased with you.</title>
+          <ellipse class="pet-shadow" cx="100" cy="174" rx="72" ry="7" />
+          <g class="pet-breath">
+            <ellipse class="pet-foot" cx="68" cy="166" rx="18" ry="10" />
+            <ellipse class="pet-foot" cx="132" cy="166" rx="18" ry="10" />
+            <path class="pet-tuft" d="M92 24 Q96 6 104 10 Q101 18 108 24" />
+            <path class="pet-blob"
+                  d="M100 22 C152 22 186 62 186 110 C186 150 152 170 100 170 C48 170 14 150 14 110 C14 62 48 22 100 22 Z" />
+            <g class="pet-face">
+              <g class="pet-eye">
+                <ellipse class="pet-eye-white" cx="74" cy="94" rx="15" ry="17" />
+                <circle class="pet-pupil" cx="74" cy="97" r="7" />
+              </g>
+              <g class="pet-eye">
+                <ellipse class="pet-eye-white" cx="126" cy="94" rx="15" ry="17" />
+                <circle class="pet-pupil" cx="126" cy="97" r="7" />
+              </g>
+              <ellipse class="pet-cheek" cx="54" cy="122" rx="12" ry="7" />
+              <ellipse class="pet-cheek" cx="146" cy="122" rx="12" ry="7" />
+              <path class="pet-mouth" d="M88 122 Q100 134 112 122" />
+            </g>
+            <g class="pet-back">
+              <circle class="pet-tail" cx="100" cy="140" r="12" />
+              <path class="pet-grump" d="M70 70 Q100 58 130 70" />
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <svg class="couch" viewBox="0 0 400 110" aria-hidden="true">
+        <rect class="couch-back" x="30" y="0" width="340" height="70" rx="28" />
+        <rect class="couch-seat" x="20" y="44" width="360" height="46" rx="20" />
+        <rect class="couch-arm" x="0" y="26" width="58" height="66" rx="24" />
+        <rect class="couch-arm" x="342" y="26" width="58" height="66" rx="24" />
+        <rect class="couch-leg" x="44" y="88" width="16" height="22" rx="5" />
+        <rect class="couch-leg" x="340" y="88" width="16" height="22" rx="5" />
+      </svg>
+    </div>
+    </div>
+
+    <div class="floor-zone">
+    <p class="caption" id="caption">Barely a pet. Mostly potential.</p>
+
+    <div class="growth">
+      <p class="growth-label" id="growth-label">Next size: Bean</p>
+      <div class="growth-bar" id="growth-bar" role="progressbar" aria-labelledby="growth-label"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="growth-fill" id="growth-fill"></div>
+      </div>
+      <p class="growth-detail" id="growth-detail">Do nothing for 20 seconds.</p>
+    </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p class="hint">It grows while you do nothing. Typing, clicking and scrolling upset it.
+      Time away counts.</p>
+    <button type="button" class="start-over" id="start-over">Start over with a new speck</button>
+  </footer>
+<div id="pr-preview-ribbon" role="note" style="position:fixed;left:12px;bottom:12px;z-index:2147483647; padding:6px 12px;border:2px solid #2b2140;border-radius:999px; background:#ffd23f;color:#2b2140;box-shadow:2px 2px 0 #2b2140; font:700 13px/1.2 system-ui,sans-serif;opacity:.92; pointer-events:none">PREVIEW · PR #6</div>
+</body>
+</html>
