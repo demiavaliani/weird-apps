@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
   <link rel="stylesheet" href="style.css">
+  <script src="snore.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -98,9 +99,15 @@
   </main>
 
   <footer class="footer">
-    <p class="hint">It grows while you do nothing. Typing, clicking and scrolling upset it.
-      Time away counts.</p>
-    <button type="button" class="start-over" id="start-over">Start over with a new speck</button>
+    <p class="hint">It grows while you do nothing, even when you're away.
+      Typing, clicking and scrolling upset it.</p>
+    <div class="controls">
+      <button type="button" class="control" id="start-over">Start over</button>
+      <button type="button" class="control" id="snore-toggle" aria-pressed="false" hidden>
+        Snoring: off
+      </button>
+    </div>
+    <p class="best" id="best" hidden>Personal best: <strong id="best-stage"></strong></p>
   </footer>
 </body>
 </html>
