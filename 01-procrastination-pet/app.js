@@ -151,9 +151,20 @@
     return now < state.sulkUntil;
   }
 
+  function withArticle(name) {
+    const lower = name.toLowerCase();
+    return /^[aeiou]/.test(lower) ? `an ${lower}` : `a ${lower}`;
+  }
+
+  // Avoid rewriting the DOM every tick when nothing changed.
+  function setText(element, text) {
+    if (element.textContent !== text) element.textContent = text;
+  }
+
   // ---------- rendering ----------
 
   let noteTimer = 0;
+  const rendered = { scale: "", percent: -1 }; // last values written to the DOM
 
   function showNote(text, duration) {
     window.clearTimeout(noteTimer);
@@ -188,29 +199,40 @@
     const stage = STAGES[index];
     const next = STAGES[index + 1];
 
-    petEl.style.setProperty("--pet-scale", scaleFor(state.growth).toFixed(3));
+    const scale = scaleFor(state.growth).toFixed(3);
+    if (scale !== rendered.scale) {
+      rendered.scale = scale;
+      petEl.style.setProperty("--pet-scale", scale);
+    }
     petEl.classList.toggle("is-sulking", sulking);
     body.classList.toggle("is-sulking", sulking);
-    petLabel.textContent = sulking
-      ? `Your pet, a ${stage.name.toLowerCase()}, sulking with its back to you under a tiny rain cloud.`
-      : `Your pet, a ${stage.name.toLowerCase()}, looking pleased with you.`;
+    setText(
+      petLabel,
+      sulking
+        ? `Your pet, ${withArticle(stage.name)}, sulking with its back to you under a tiny rain cloud.`
+        : `Your pet, ${withArticle(stage.name)}, looking pleased with you.`,
+    );
 
+    let percent = 100;
     if (next) {
       const progress = (state.growth - stage.at) / (next.at - stage.at);
-      const percent = Math.min(100, Math.max(0, Math.floor(progress * 100)));
+      percent = Math.min(100, Math.max(0, Math.floor(progress * 100)));
+      setText(growthLabel, `Next size: ${next.name}`);
+      setText(
+        growthDetail,
+        sulking ? "Growth paused. It's sulking." : `Do nothing for ${formatDuration(next.at - state.growth)}.`,
+      );
+    } else {
+      setText(growthLabel, "Final form");
+      setText(
+        growthDetail,
+        sulking ? "Even final forms sulk." : "There is nowhere left to grow. Keep doing nothing anyway.",
+      );
+    }
+    if (percent !== rendered.percent) {
+      rendered.percent = percent;
       growthFill.style.width = `${percent}%`;
       growthBar.setAttribute("aria-valuenow", String(percent));
-      growthLabel.textContent = `Next size: ${next.name}`;
-      growthDetail.textContent = sulking
-        ? "Growth paused. It's sulking."
-        : `Do nothing for ${formatDuration(next.at - state.growth)}.`;
-    } else {
-      growthFill.style.width = "100%";
-      growthBar.setAttribute("aria-valuenow", "100");
-      growthLabel.textContent = "Final form";
-      growthDetail.textContent = sulking
-        ? "Even final forms sulk."
-        : "There is nowhere left to grow. Keep doing nothing anyway.";
     }
   }
 
@@ -219,9 +241,13 @@
   // Wall-clock based, so time in a background tab still counts.
   function tick() {
     const now = Date.now();
-    const elapsed = Math.max(0, (now - state.lastTick) / 1000);
+    const elapsedMs = Math.max(0, now - state.lastTick);
+    // Only the part of this interval outside a sulk counts (ticks can be late in
+    // background tabs, so a sulk may have started and ended inside one interval).
+    const sulkMs = Math.max(0, Math.min(now, state.sulkUntil) - state.lastTick);
     state.lastTick = now;
-    if (!isSulking(now)) state.growth += Math.min(elapsed, MAX_AWAY_S);
+    const idleSeconds = Math.max(0, elapsedMs - sulkMs) / 1000;
+    state.growth += Math.min(idleSeconds, MAX_AWAY_S);
 
     render(now);
 
@@ -253,18 +279,32 @@
   }
 
   let sideEyeTimer = 0;
+  let sideEyeFrame = 0;
+  let pointerX = 0;
+  let currentLook = 0;
 
-  function sideEye(event) {
-    if (event.pointerType && event.pointerType !== "mouse") return;
+  function updateSideEye() {
+    sideEyeFrame = 0;
     const rect = petEl.getBoundingClientRect();
-    const look = event.clientX < rect.left + rect.width / 2 ? -5 : 5;
-    petEl.style.setProperty("--look", `${look}px`);
+    const look = pointerX < rect.left + rect.width / 2 ? -5 : 5;
+    if (look !== currentLook) {
+      currentLook = look;
+      petEl.style.setProperty("--look", `${look}px`);
+    }
     petEl.classList.add("is-side-eye");
     window.clearTimeout(sideEyeTimer);
     sideEyeTimer = window.setTimeout(() => {
+      currentLook = 0;
       petEl.classList.remove("is-side-eye");
       petEl.style.setProperty("--look", "0px");
     }, SIDE_EYE_MS);
+  }
+
+  // Mouse movement only earns a suspicious look, at most once per frame.
+  function sideEye(event) {
+    if (event.pointerType && event.pointerType !== "mouse") return;
+    pointerX = event.clientX;
+    if (!sideEyeFrame) sideEyeFrame = window.requestAnimationFrame(updateSideEye);
   }
 
   const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock"]);
