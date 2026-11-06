@@ -3,12 +3,12 @@
 
 Only real site files are published, so the backlog stays private on the site:
   - SITE_FILES (the launcher and friends)
-  - apps.json, reduced to released apps
-  - the folders of released apps (NN-slug/)
+  - the folders of published apps (NN-slug/)
+  - apps.json, reduced to listed apps
 
-Released means status "live". With --preview, apps that are "in-review" count as
-released too, and are shown as "live", so a PR preview looks like the site will
-after merging.
+Published: "deployed" apps (reachable at their URL so they can be checked, but not
+listed in the launcher) and "live" apps (listed). With --preview, "in-review" apps
+are published and listed too, so a PR preview shows the app in the launcher.
 
 Usage: build-site.py <out-dir> [--preview]
 """
@@ -43,19 +43,26 @@ def main() -> int:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
-    released_statuses = {"live", "in-review"} if preview else {"live"}
+    published_statuses = {"deployed", "live"}
+    listed_statuses = {"live"}
+    if preview:
+        published_statuses.add("in-review")
+        listed_statuses.add("in-review")
     apps = json.loads((REPO_ROOT / "apps.json").read_text(encoding="utf-8"))
 
     public_apps = []
     for app in apps:
-        if app.get("status") not in released_statuses:
+        status = app.get("status")
+        if status not in published_statuses:
             continue
         folder = f"{app['id']}-{app['slug']}"
         source = REPO_ROOT / folder
         if not (source / "index.html").is_file():
-            print(f"Released app {folder} has no {folder}/index.html", file=sys.stderr)
+            print(f"Published app {folder} has no {folder}/index.html", file=sys.stderr)
             return 1
         shutil.copytree(source, out / folder)
+        if status not in listed_statuses:
+            continue
         entry = {key: app[key] for key in PUBLIC_FIELDS if key in app}
         entry["status"] = "live"
         public_apps.append(entry)
@@ -70,8 +77,10 @@ def main() -> int:
 
     (out / "apps.json").write_text(json.dumps(public_apps, indent=2) + "\n", encoding="utf-8")
 
-    released = ", ".join(a["slug"] for a in public_apps) or "none"
-    print(f"Built {'preview' if preview else 'site'} in {out} (released apps: {released})")
+    published = sorted(p.name for p in out.iterdir() if p.is_dir())
+    listed = ", ".join(a["slug"] for a in public_apps) or "none"
+    print(f"Built {'preview' if preview else 'site'} in {out} "
+          f"(published: {', '.join(published) or 'none'}; listed: {listed})")
     return 0
 
 
