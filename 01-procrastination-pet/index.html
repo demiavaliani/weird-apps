@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="A napping cat that grows while you do absolutely nothing, and sulks when you don't.">
+  <title>Procrastination Pet</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%8B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="snore.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../">All weird apps</a>
+    <h1 class="app-title">Procrastination Pet</h1>
+  </header>
+
+  <main class="room" id="room">
+    <div class="wall-zone">
+    <p class="stage-name" id="stage-name">Speck</p>
+
+    <div class="scene">
+      <p class="note" id="note" role="status" aria-live="polite" hidden></p>
+
+      <div class="pet" id="pet">
+        <svg class="rain" viewBox="0 0 120 90" aria-hidden="true">
+          <g class="rain-cloud">
+            <circle cx="38" cy="34" r="20" />
+            <circle cx="62" cy="26" r="24" />
+            <circle cx="86" cy="36" r="18" />
+            <rect x="22" y="34" width="80" height="20" rx="10" />
+          </g>
+          <g class="rain-drops">
+            <line x1="40" y1="62" x2="36" y2="74" />
+            <line x1="60" y1="62" x2="56" y2="74" />
+            <line x1="80" y1="62" x2="76" y2="74" />
+          </g>
+        </svg>
+
+        <svg class="pet-body" id="pet-svg" viewBox="0 0 200 180" role="img"
+             aria-labelledby="pet-label">
+          <title id="pet-label">Your cat, a speck, napping happily.</title>
+          <ellipse class="pet-shadow" cx="100" cy="174" rx="78" ry="7" />
+          <g class="pet-breath">
+            <!-- tail seen from behind (sulking), drawn under the body -->
+            <g class="pet-back-tail">
+              <path class="tail-outline" d="M160 150 C204 142 208 84 184 58" />
+              <path class="tail-fill" d="M160 150 C204 142 208 84 184 58" />
+            </g>
+            <ellipse class="pet-paw" cx="74" cy="166" rx="18" ry="9" />
+            <ellipse class="pet-paw" cx="126" cy="166" rx="18" ry="9" />
+            <!-- body and head in one loaf, with ears -->
+            <path class="pet-body-shape"
+                  d="M40 168 C18 168 12 140 14 112 C16 80 30 60 50 52 L46 16 L80 42 C93 38 107 38 120 42 L154 16 L150 52 C170 60 184 80 186 112 C188 140 182 168 160 168 Z" />
+            <path class="pet-inner-ear" d="M55 48 L53 28 L71 42 Z" />
+            <path class="pet-inner-ear" d="M145 48 L147 28 L129 42 Z" />
+
+            <g class="pet-face">
+              <!-- curled tail wrapped around the front -->
+              <path class="tail-outline" d="M150 166 C182 166 192 140 176 126" />
+              <path class="tail-fill" d="M150 166 C182 166 192 140 176 126" />
+              <ellipse class="pet-cheek" cx="58" cy="118" rx="12" ry="7" />
+              <ellipse class="pet-cheek" cx="142" cy="118" rx="12" ry="7" />
+              <path class="pet-line pet-eye-closed pet-eye-left" d="M60 96 Q73 106 86 96" />
+              <path class="pet-line pet-eye-closed" d="M114 96 Q127 106 140 96" />
+              <g class="pet-eye-open" id="pet-open-eye">
+                <ellipse class="pet-eye-white" cx="73" cy="96" rx="13" ry="14" />
+                <ellipse class="pet-pupil" cx="73" cy="96" rx="4.5" ry="8.5" />
+              </g>
+              <path class="pet-nose" d="M95 110 L105 110 L100 116 Z" />
+              <path class="pet-line" d="M88 120 Q94 127 100 120 Q106 127 112 120" />
+              <g class="pet-whiskers">
+                <path d="M62 112 L30 106" /><path d="M62 120 L28 122" />
+                <path d="M138 112 L170 106" /><path d="M138 120 L172 122" />
+              </g>
+            </g>
+
+            <g class="pet-back">
+              <path class="pet-line pet-stripe" d="M84 46 Q100 54 116 46" />
+              <path class="pet-line pet-stripe" d="M74 66 Q100 78 126 66" />
+              <path class="pet-line pet-stripe" d="M70 88 Q100 100 130 88" />
+            </g>
+          </g>
+          <g class="zzz" aria-hidden="true">
+            <text x="158" y="30">z</text>
+            <text x="176" y="12">z</text>
+          </g>
+        </svg>
+      </div>
+
+      <svg class="couch" viewBox="0 0 400 110" aria-hidden="true">
+        <rect class="couch-back" x="30" y="0" width="340" height="70" rx="28" />
+        <rect class="couch-seat" x="20" y="44" width="360" height="46" rx="20" />
+        <rect class="couch-arm" x="0" y="26" width="58" height="66" rx="24" />
+        <rect class="couch-arm" x="342" y="26" width="58" height="66" rx="24" />
+        <rect class="couch-leg" x="44" y="88" width="16" height="22" rx="5" />
+        <rect class="couch-leg" x="340" y="88" width="16" height="22" rx="5" />
+      </svg>
+    </div>
+    </div>
+
+    <div class="floor-zone">
+    <p class="caption" id="caption">Barely a pet. Mostly potential.</p>
+
+    <div class="growth">
+      <p class="growth-label" id="growth-label">Next size: Bean</p>
+      <div class="growth-bar" id="growth-bar" role="progressbar" aria-labelledby="growth-label"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="growth-fill" id="growth-fill"></div>
+      </div>
+      <p class="growth-detail" id="growth-detail">Do nothing for 20 seconds.</p>
+    </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p class="hint">It grows while you do nothing, even when you're away.
+      Typing, clicking and scrolling upset it.</p>
+    <div class="controls">
+      <button type="button" class="control" id="start-over">Start over</button>
+      <button type="button" class="control" id="snore-toggle" aria-pressed="false" hidden>
+        Snoring: off
+      </button>
+    </div>
+    <p class="best" id="best" hidden>Personal best: <strong id="best-stage"></strong></p>
+  </footer>
+</body>
+</html>
