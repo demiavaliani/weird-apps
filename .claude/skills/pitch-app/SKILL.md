@@ -51,7 +51,8 @@ If the idea is new, show the `apps.json` entry you'd add.
 
 ## 4. Stop
 
-End with: reply **"Approved plan"** to start building, or tell me what to change.
+Then ask with the question dialog (see "Asking for approval" in `CLAUDE.md`):
+options **"Approved plan"** (start building) and **"Request changes"**.
 
 - Changes requested: revise and pitch again. Still nothing is built.
 - "Approved plan" (or an unmistakable variant such as "Approve plan") from the user

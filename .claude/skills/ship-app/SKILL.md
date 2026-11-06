@@ -63,7 +63,8 @@ Send:
 - a brief summary of what was built
 - 2–3 small optional improvements, not built
 
-End with: reply **"Approved PR"** to mark it ready, or tell me what to change.
+Then ask with the question dialog (see "Asking for approval" in `CLAUDE.md`):
+options **"Approved PR"** (mark it ready) and **"Request changes"**.
 
 - Changes requested: commit and push to the same branch (the preview updates
   itself), re-run Phase 3 for anything non-trivial, then send Approval 1 again.
@@ -71,7 +72,8 @@ End with: reply **"Approved PR"** to mark it ready, or tell me what to change.
 
 ## Phase 6: Approval 2 → **Stop**
 
-Say the PR is ready and end with: reply **"Approved merge"** to merge it.
+Say the PR is ready, then ask with the question dialog: options
+**"Approved merge"** and **"Request changes"**.
 Never merge a draft.
 
 ## Phase 7: Merge and go live (after "Approved merge")
