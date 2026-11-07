@@ -119,6 +119,7 @@
     growth: 0,              // seconds of idleness, ever
     best: 0,                // the most growth ever reached, kept after starting over
     snoring: false,         // the user turned the snore sound on
+    watching: false,        // one eye is open, following the cursor
     sulkUntil: 0,           // timestamp (ms) when the current sulk ends
     lastTick: Date.now(),
     lastSave: 0,
@@ -295,7 +296,9 @@
   function renderSnore(index, sulking) {
     const bigEnough = index >= snoreFromIndex;
     const visible = document.visibilityState === "visible";
-    if (window.PetSnore) window.PetSnore.setActive(state.snoring && bigEnough && !sulking && visible);
+    // It only snores while properly asleep: not sulking, and not peeking at the cursor.
+    const asleep = !sulking && !state.watching;
+    if (window.PetSnore) window.PetSnore.setActive(state.snoring && bigEnough && asleep && visible);
     let label = "Snoring: off";
     if (state.snoring) label = bigEnough ? "Snoring: on" : `Snoring at ${SNORE_FROM_STAGE}`;
     setText(snoreButton, label);
@@ -360,9 +363,16 @@
   const PUPIL_TRAVEL = 5; // how far the pupil can move inside the eye (SVG units)
 
   // One eye opens and follows the cursor; it closes again once the mouse rests.
+  function setWatching(watching) {
+    if (state.watching === watching) return;
+    state.watching = watching;
+    petEl.classList.toggle("is-side-eye", watching);
+    render(Date.now()); // pause or resume the snore right away
+  }
+
   function updateSideEye() {
     sideEyeFrame = 0;
-    petEl.classList.add("is-side-eye");
+    setWatching(true);
     const eye = openEye.getBoundingClientRect();
     const dx = pointerX - (eye.left + eye.width / 2);
     const dy = pointerY - (eye.top + eye.height / 2);
@@ -373,9 +383,7 @@
     petEl.style.setProperty("--look-x", `${lookX}px`);
     petEl.style.setProperty("--look-y", `${lookY}px`);
     window.clearTimeout(sideEyeTimer);
-    sideEyeTimer = window.setTimeout(() => {
-      petEl.classList.remove("is-side-eye");
-    }, SIDE_EYE_MS);
+    sideEyeTimer = window.setTimeout(() => setWatching(false), SIDE_EYE_MS);
   }
 
   // Mouse movement only earns one suspicious open eye, updated at most once per frame.
